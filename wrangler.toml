@@ -1,0 +1,24 @@
+name = "discipline-bot"
+main = "src/index.ts"
+compatibility_date = "2024-09-01"
+
+# Вебхук Telegram будет слать POST на этот роут:
+# https://<твой-subdomain>.workers.dev/webhook/<WEBHOOK_SECRET>
+
+[vars]
+# Часовой пояс для логики (только для форматирования времени/еженедельной сводки)
+TZ = "Europe/Amsterdam"
+# Минуты смещения от UTC (Amsterdam: лето +120, зима +60). Поставь актуальное число!
+TZ_OFFSET_MIN = 120
+
+# CRON-триггеры работают в UTC! Для 07:00 и 22:50 по Amsterdam (лето=UTC+2):
+# 07:00 => 05:00 UTC; 22:50 => 20:50 UTC
+[[triggers.crons]]
+crons = ["0 5 * * *", "50 20 * * *"]
+
+# KV для состояния
+[[kv_namespaces]]
+binding = "KV"
+id = "YOUR_KV_ID"
+# при деплое через wrangler он сам создаст и подставит id (wrangler kv:namespace create KV)
+
