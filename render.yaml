@@ -1,0 +1,16 @@
+services:
+  - type: worker
+    name: discipline-bot
+    env: docker
+    autoDeploy: true
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: TZ
+        value: Europe/Amsterdam
+      - key: DB_PATH
+        value: /app/data/bot.db
+    disk:
+      name: data
+      mountPath: /app/data
+      sizeGB: 1
