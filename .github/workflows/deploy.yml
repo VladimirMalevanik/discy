@@ -1,14 +1,23 @@
-name: Build & Deploy
+name: Build & Push (GHCR, lowercase fix)
 
 on:
   push:
     branches: [ "main" ]
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
+
+      - name: Prepare lowercase owner
+        id: prep
+        run: |
+          OWNER_LC=$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')
+          echo "owner=${OWNER_LC}" >> $GITHUB_OUTPUT
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -28,23 +37,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/discipline-bot:latest
-
-      - name: Deploy over SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
-          script: |
-            set -e
-            cd ${{ secrets.REMOTE_DIR }}
-            if [ ! -f .env ]; then
-              echo "BOT_TOKEN=${{ secrets.BOT_TOKEN }}" > .env
-              echo "TZ=Europe/Amsterdam" >> .env
-            fi
-            docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
-            docker pull ghcr.io/${{ github.repository_owner }}/discipline-bot:latest
-            sed -i 's|build: .|image: ghcr.io/${{ github.repository_owner }}/discipline-bot:latest|' docker-compose.yml
-            docker compose up -d
+          tags: ghcr.io/${{ steps.prep.outputs.owner }}/discipline-bot:latest
